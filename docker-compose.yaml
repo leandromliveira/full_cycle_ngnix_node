@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - node_app
+    networks:
+      - app_network
+
+  node_app:
+    build:
+      context: ./node_app
+    volumes:
+      - ./node_app:/app
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root_password
+      - MYSQL_DATABASE=people_db
+    depends_on:
+      - db
+    networks:
+      - app_network
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: people_db
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - app_network
+
+volumes:
+  mysql:
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
